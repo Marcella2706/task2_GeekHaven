@@ -1,10 +1,14 @@
-import type { Metadata } from "next";
 import "./globals.css";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import Navbar from "@/components/header/Navbar";
+import { CartProvider } from "@/context/CartContext";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "ReSellHub",
-  description: "Buy & Sell with Ease",
+  description: "Buy and Sell Products",
 };
 
 export default function RootLayout({
@@ -14,9 +18,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gradient-to-b from-white to-gray-100">
-        <Navbar />  
-        <main>{children}</main>
+      <body className={inter.className}>
+        <CartProvider>
+          <Navbar />
+          <main>{children}</main>
+        </CartProvider>
       </body>
     </html>
   );
