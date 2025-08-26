@@ -65,7 +65,7 @@ export default function CartPage() {
             <p className="text-xl font-bold">₹{total}</p>
           </div>
 
-          <Button className="w-full text-lg py-6">Proceed to Checkout</Button>
+          <Button className="w-full text-lg py-6" onClick={()=>{router.push(`/checkout`)}}>Proceed to Checkout</Button>
         </>
       )}
     </div>
