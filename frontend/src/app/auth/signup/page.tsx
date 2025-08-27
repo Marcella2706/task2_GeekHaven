@@ -42,8 +42,6 @@ export default function SignupPage() {
               <Input type="text" placeholder="Full Name" required />
               <Input type="email" placeholder="Email" required />
               <Input type="password" placeholder="Password" required />
-              <Input type="text" placeholder="Business Name" required />
-              <Input type="text" placeholder="Business Address" required />
               <Button type="submit">Sign Up as Seller</Button>
               <Button type="button" variant="ghost" onClick={() => setRole(null)}>
                 ← Back
