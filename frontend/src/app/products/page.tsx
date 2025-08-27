@@ -30,6 +30,7 @@ export default function ProductsPage() {
               >
                 View Details
               </Button>
+              
             </CardContent>
           </Card>
         ))}
