@@ -25,7 +25,7 @@ export default function WishlistPage() {
     if (storedWishlist) {
       setWishlist(JSON.parse(storedWishlist));
     }
-  }, [logAction]);
+  }, []);
 
   useEffect(() => {
     if (mounted) {
