@@ -92,7 +92,7 @@
     background: rgba(40, 15, 30, 0.2);
     border: 1px solid rgba(255, 79, 122, 0.2);
   }
-]
+
   .gradient-text {
     background: linear-gradient(90deg, #d61c4e, #ff4f7a);
     background-clip: text;
