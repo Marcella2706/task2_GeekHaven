@@ -74,7 +74,7 @@ export default function LogsRecentPage() {
             Recent Activity Logs
           </h1>
           <p className="text-xl text-white/80">
-            Track the last 20 user interactions and system events
+            Tracks the last 20 user interactions and system events
           </p>
         </div>
 
