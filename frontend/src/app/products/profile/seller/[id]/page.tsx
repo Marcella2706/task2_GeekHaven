@@ -17,7 +17,6 @@ import {
   ShoppingCart,
   Eye,
   Heart,
-  TrendingUp,
   Award
 } from "lucide-react";
 import Image from "next/image";
@@ -104,8 +103,9 @@ export default function SellerProfilePage({
 
   const handleContactSeller = () => {
     logAction('click', `Contacted seller: ${mockSeller.name}`, { sellerId: id });
-    alert("Contact feature would open chat/messaging system");
+    router.push(`/products/profile/seller/${id}/chat`);
   };
+  
 
   if (!mounted) {
     return (
