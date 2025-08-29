@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Navbar from "@/components/header/Navbar";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { ASSIGNMENT_SEED, generateColorFromSeed } from "@/utils/seed";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -11,13 +12,13 @@ const seedColors = generateColorFromSeed(ASSIGNMENT_SEED);
 
 export const metadata: Metadata = {
   title: {
-    default: "ReSellHub - Ultimate Reselling Marketplace",
+    default: "ReSellHub - Premium Marketplace with Wooden Aesthetics",
     template: "%s | ReSellHub"
   },
-  description: "Discover unique products, resell your treasures, and find the best deals in our dynamic marketplace with cutting-edge features and stunning design.",
+  description: "Experience the warmth of natural wood design in our premium reselling marketplace. Buy and sell with style and sophistication.",
   keywords: [
     "reselling", "marketplace", "buy", "sell", "second-hand", "pre-owned", 
-    "electronics", "fashion", "home", "books", "deals", "online shopping"
+    "electronics", "fashion", "home", "books", "deals", "online shopping", "wood design", "premium"
   ],
   authors: [{ name: "ReSellHub Team" }],
   creator: "ReSellHub",
@@ -35,22 +36,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    title: "ReSellHub - Ultimate Reselling Marketplace",
-    description: "The future of buying and selling pre-loved items",
+    title: "ReSellHub - Premium Marketplace with Wooden Aesthetics",
+    description: "Experience the warmth of natural wood design in our premium reselling marketplace",
     siteName: "ReSellHub",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "ReSellHub - Ultimate Reselling Marketplace",
+        alt: "ReSellHub - Premium Marketplace with Wooden Aesthetics",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ReSellHub - Ultimate Reselling Marketplace",
-    description: "The future of buying and selling pre-loved items",
+    title: "ReSellHub - Premium Marketplace with Wooden Aesthetics",
+    description: "Experience the warmth of natural wood design in our premium reselling marketplace",
     images: ["/twitter-image.jpg"],
   },
   robots: {
@@ -108,20 +109,22 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} antialiased wood-texture`}>
         <CartProvider>
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <footer className="mt-auto py-8 px-6">
-              <div className="max-w-6xl mx-auto text-center text-white/60 space-y-2">
-                <p>&copy; 2024 ReSellHub. All rights reserved.</p>
-                <p className="text-xs">
-                  Powered by {ASSIGNMENT_SEED} • Built with Next.js & TypeScript
-                </p>
-              </div>
-            </footer>
-          </div>
+          <WishlistProvider>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <footer className="mt-auto py-8 px-6">
+                <div className="max-w-6xl mx-auto text-center text-white/60 space-y-2">
+                  <p>&copy; 2024 ReSellHub. All rights reserved.</p>
+                  <p className="text-xs">
+                    Powered by {ASSIGNMENT_SEED} • Built with Next.js & TypeScript • Wood Theme
+                  </p>
+                </div>
+              </footer>
+            </div>
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

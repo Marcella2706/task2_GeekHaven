@@ -3,15 +3,17 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { products } from "../lib/mockData";
 import { useActionLogger } from "@/utils/seed";
 import { generateProductIdWithChecksum, calculatePlatformFee } from "@/utils/seed";
-import { Heart, ShoppingCart, Eye, Filter, Grid, List, ChevronDown, Star, MapPin } from "lucide-react";
+import { Heart, ShoppingCart, Eye, Filter, Grid, List, ChevronDown, Star, MapPin, Search } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 type SortOption = "relevance" | "price-low" | "price-high" | "newest" | "popular";
 type ViewMode = "grid" | "list";
@@ -35,6 +37,7 @@ export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { cart, toggleCartItem } = useCart();
+  const { wishlist, toggleWishlistItem, isInWishlist } = useWishlist();
   const { logAction } = useActionLogger();
   
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -43,19 +46,48 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [mounted, setMounted] = useState(false);
   
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCondition, setSelectedCondition] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minRating, setMinRating] = useState("");
+  
   const ITEMS_PER_PAGE = 8;
 
   useEffect(() => {
     setMounted(true);
-    const searchQuery = searchParams?.get("q") || "";
-    const category = searchParams?.get("category") || "";
-    logAction('navigate', 'Visited Products page', { searchQuery, category });
-  }, [logAction, searchParams]);
+    if (!mounted) {
+      const query = searchParams?.get("q") || "";
+      const category = searchParams?.get("category") || "";
+      setSearchQuery(query);
+      setSelectedCategory(category);
+    }
+  }, [mounted]);
+  
 
-  const searchQuery = searchParams?.get("q") || "";
-  const categoryFilter = searchParams?.get("category") || "";
-  const minPrice = parseInt(searchParams?.get("min") || "0");
-  const maxPrice = parseInt(searchParams?.get("max") || "999999");
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    const params = new URLSearchParams(searchParams.toString());
+  
+    if (searchQuery.trim()) {
+      params.set("q", searchQuery.trim());
+    } else {
+      params.delete("q");
+    }
+  
+    if (selectedCategory) {
+      params.set("category", selectedCategory);
+    } else {
+      params.delete("category");
+    }
+  
+    const searchParamsString = params.toString();
+    router.push(`/products${searchParamsString ? `?${searchParamsString}` : ""}`);
+  };
+  
 
   const filteredProducts = useMemo(() => {
     let filtered = extendedProducts.filter(product => {
@@ -63,10 +95,15 @@ export default function ProductsPage() {
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.category.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesCategory = !categoryFilter || product.category === categoryFilter;
-      const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
+      const matchesCategory = !selectedCategory || product.category === selectedCategory;
+      const matchesCondition = !selectedCondition || product.condition === selectedCondition;
+      const matchesLocation = !selectedLocation || product.seller.location.toLowerCase().includes(selectedLocation.toLowerCase());
+      const matchesMinPrice = !minPrice || product.price >= parseInt(minPrice);
+      const matchesMaxPrice = !maxPrice || product.price <= parseInt(maxPrice);
+      const matchesRating = !minRating || product.seller.rating >= parseFloat(minRating);
       
-      return matchesSearch && matchesCategory && matchesPrice;
+      return matchesSearch && matchesCategory && matchesCondition && 
+             matchesLocation && matchesMinPrice && matchesMaxPrice && matchesRating;
     });
 
     switch (sortBy) {
@@ -87,7 +124,7 @@ export default function ProductsPage() {
     }
 
     return filtered;
-  }, [searchQuery, categoryFilter, minPrice, maxPrice, sortBy]);
+  }, [searchQuery, selectedCategory, selectedCondition, selectedLocation, minPrice, maxPrice, minRating, sortBy]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = filteredProducts.slice(
@@ -113,8 +150,13 @@ export default function ProductsPage() {
     toggleCartItem(product);
   };
 
-  const handleLike = (product: any) => {
-    logAction('like', `Liked product: ${product.name}`, { productId: product.id });
+  const handleWishlistToggle = (product: any) => {
+    const inWishlist = isInWishlist(product.id);
+    logAction('like', inWishlist ? `Removed ${product.name} from wishlist` : `Added ${product.name} to wishlist`, {
+      productId: product.id,
+      action: inWishlist ? 'remove' : 'add'
+    });
+    toggleWishlistItem(product);
   };
 
   if (!mounted) {
@@ -135,7 +177,7 @@ export default function ProductsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            Explore Products
+            🛍️ Explore Premium Products
           </motion.h1>
           {searchQuery && (
             <p className="text-xl text-white/80">
@@ -146,22 +188,35 @@ export default function ProductsPage() {
             <Badge className="bg-primary/20 text-primary border-primary/30">
               {filteredProducts.length} Products Found
             </Badge>
-            {categoryFilter && (
+            {selectedCategory && (
               <Badge className="bg-secondary/20 text-secondary border-secondary/30">
-                Category: {categoryFilter}
-              </Badge>
-            )}
-            {(minPrice > 0 || maxPrice < 999999) && (
-              <Badge className="bg-accent/20 text-accent border-accent/30">
-                ₹{minPrice} - ₹{maxPrice}
+                Category: {selectedCategory}
               </Badge>
             )}
           </div>
         </div>
 
         <Card className="card-gradient glow">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <CardHeader>
+            <CardTitle className="text-xl gradient-text">Search & Filter Products</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleSearch} className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products, brands, categories..."
+                  className="input-gradient pl-10"
+                />
+              </div>
+              <Button type="submit" className="btn-gradient">
+                Search
+              </Button>
+            </form>
+
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Button
@@ -198,7 +253,7 @@ export default function ProductsPage() {
                   className="border-primary/50 text-white hover:bg-primary/10"
                 >
                   <Filter className="w-4 h-4 mr-2" />
-                  Filters
+                  Advanced Filters
                   <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
                 </Button>
               </div>
@@ -227,12 +282,16 @@ export default function ProductsPage() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 pt-4 border-t border-white/10"
+                className="pt-4 border-t border-primary/20"
               >
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">Category</label>
-                    <select className="input-gradient w-full px-3 py-2 rounded text-sm">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-white/80">Category</label>
+                    <select 
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="input-gradient w-full px-3 py-2 rounded text-sm"
+                    >
                       <option value="" className="bg-gray-900">All Categories</option>
                       <option value="electronics" className="bg-gray-900">Electronics</option>
                       <option value="fashion" className="bg-gray-900">Fashion</option>
@@ -240,9 +299,14 @@ export default function ProductsPage() {
                       <option value="books" className="bg-gray-900">Books</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">Condition</label>
-                    <select className="input-gradient w-full px-3 py-2 rounded text-sm">
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-white/80">Condition</label>
+                    <select 
+                      value={selectedCondition}
+                      onChange={(e) => setSelectedCondition(e.target.value)}
+                      className="input-gradient w-full px-3 py-2 rounded text-sm"
+                    >
                       <option value="" className="bg-gray-900">Any Condition</option>
                       <option value="new" className="bg-gray-900">New</option>
                       <option value="like-new" className="bg-gray-900">Like New</option>
@@ -250,9 +314,14 @@ export default function ProductsPage() {
                       <option value="fair" className="bg-gray-900">Fair</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">Location</label>
-                    <select className="input-gradient w-full px-3 py-2 rounded text-sm">
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-white/80">Location</label>
+                    <select 
+                      value={selectedLocation}
+                      onChange={(e) => setSelectedLocation(e.target.value)}
+                      className="input-gradient w-full px-3 py-2 rounded text-sm"
+                    >
                       <option value="" className="bg-gray-900">Any Location</option>
                       <option value="mumbai" className="bg-gray-900">Mumbai</option>
                       <option value="delhi" className="bg-gray-900">Delhi</option>
@@ -260,13 +329,65 @@ export default function ProductsPage() {
                       <option value="chennai" className="bg-gray-900">Chennai</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">Rating</label>
-                    <select className="input-gradient w-full px-3 py-2 rounded text-sm">
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-white/80">Min Rating</label>
+                    <select 
+                      value={minRating}
+                      onChange={(e) => setMinRating(e.target.value)}
+                      className="input-gradient w-full px-3 py-2 rounded text-sm"
+                    >
                       <option value="" className="bg-gray-900">Any Rating</option>
                       <option value="4" className="bg-gray-900">4★ & Above</option>
                       <option value="4.5" className="bg-gray-900">4.5★ & Above</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-white/80">Price Range</label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        placeholder="Min ₹"
+                        className="input-gradient"
+                      />
+                      <Input
+                        type="number"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        placeholder="Max ₹"
+                        className="input-gradient"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-end gap-2">
+                    <Button
+                      onClick={() => {
+                        setSelectedCategory("");
+                        setSelectedCondition("");
+                        setSelectedLocation("");
+                        setMinPrice("");
+                        setMaxPrice("");
+                        setMinRating("");
+                        setSearchQuery("");
+                        logAction('click', 'Cleared all filters');
+                      }}
+                      variant="outline"
+                      className="border-primary/50 text-white hover:bg-primary/10"
+                    >
+                      Clear Filters
+                    </Button>
+                    <Button
+                      onClick={handleSearch}
+                      className="btn-gradient"
+                    >
+                      Apply Filters
+                    </Button>
                   </div>
                 </div>
               </motion.div>
@@ -289,8 +410,9 @@ export default function ProductsPage() {
                 </p>
                 <Button 
                   onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("");
                     logAction('click', 'Clicked Browse All from no results');
-                    router.push('/products');
                   }}
                   className="btn-gradient"
                 >
@@ -307,6 +429,7 @@ export default function ProductsPage() {
             }>
               {paginatedProducts.map((product, index) => {
                 const inCart = cart.some((item) => item.id === product.id);
+                const inWishlist = isInWishlist(product.id);
 
                 return viewMode === "grid" ? (
                   <motion.div
@@ -331,13 +454,17 @@ export default function ProductsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="p-2 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20"
+                            className={`p-2 backdrop-blur-sm border-white/20 transition-colors ${
+                              inWishlist 
+                                ? 'bg-red-600/80 hover:bg-red-700/80 text-white' 
+                                : 'bg-white/10 hover:bg-white/20 text-white'
+                            }`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleLike(product);
+                              handleWishlistToggle(product);
                             }}
                           >
-                            <Heart className="w-4 h-4 text-red-400" />
+                            <Heart className={`w-4 h-4 transition-colors ${inWishlist ? 'fill-current text-red-100' : ''}`} />
                           </Button>
                         </div>
                         <div className="absolute top-3 left-3">
@@ -499,12 +626,16 @@ export default function ProductsPage() {
                               </Button>
                               
                               <Button
-                                onClick={() => handleLike(product)}
+                                onClick={() => handleWishlistToggle(product)}
                                 variant="outline"
-                                className="border-primary/50 text-white hover:bg-primary/10"
+                                className={`border-primary/50 transition-colors ${
+                                  inWishlist 
+                                    ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30' 
+                                    : 'text-white hover:bg-primary/10'
+                                }`}
                                 size="sm"
                               >
-                                <Heart className="w-4 h-4" />
+                                <Heart className={`w-4 h-4 ${inWishlist ? 'fill-current' : ''}`} />
                               </Button>
                             </div>
                           </div>

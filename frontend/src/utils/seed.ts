@@ -1,4 +1,4 @@
-export const ASSIGNMENT_SEED = "FRONT25-RH2024-DARK";
+export const ASSIGNMENT_SEED = "FRONT25-018";
 
 export function hashSeed(seed: string): number {
   let hash = 0;
@@ -21,13 +21,16 @@ export function generateColorFromSeed(seed: string): {
   gradient: string;
 } {
   const hash = hashSeed(seed);
-  const hue1 = hash % 360;
-  const hue2 = (hash + 120) % 360;
-  const hue3 = (hash + 240) % 360;
+  const browns = ['#8B4513', '#A0522D', '#CD853F', '#D2691E', '#B8860B'];
+  const ambers = ['#FF8C00', '#FFA500', '#DAA520', '#F4A460', '#DEB887'];
   
-  const primary = `hsl(${hue1}, 80%, 60%)`;
-  const secondary = `hsl(${hue2}, 70%, 50%)`;
-  const accent = `hsl(${hue3}, 85%, 65%)`;
+  const primaryIndex = hash % browns.length;
+  const secondaryIndex = (hash + 1) % ambers.length;
+  const accentIndex = (hash + 2) % browns.length;
+  
+  const primary = browns[primaryIndex];
+  const secondary = ambers[secondaryIndex];
+  const accent = browns[accentIndex];
   const gradient = `linear-gradient(135deg, ${primary} 0%, ${secondary} 50%, ${accent} 100%)`;
   
   return { primary, secondary, accent, gradient };
