@@ -155,7 +155,7 @@ export default function WishlistPage() {
                           <Badge
                             className="text-green-400 border-green-400/50 bg-green-500/20"
                           >
-                            ✅ Available
+                            Available
                           </Badge>
                         </div>
                         <div className="text-sm text-white/60 mt-1">

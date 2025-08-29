@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingCart, User, Heart, Activity, Info, UserPlus, LogIn } from "lucide-react";
+import { ShoppingCart, User, Heart, Activity, Info, UserPlus, LogIn, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -17,14 +17,26 @@ export default function Navbar() {
   const { logAction } = useActionLogger();
   
   const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     setMounted(true);
+    const storedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(storedTheme);
+    document.documentElement.classList.toggle('dark', storedTheme === 'dark');
   }, []);
 
   const handleNavClick = (path: string, label: string) => {
-    logAction('navigate', `Navigated to ${label}`, { path });
+    logAction('navigate', `Mapsd to ${label}`, { path });
     router.push(path);
+  };
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    logAction('click', `Toggled theme to ${newTheme}`);
   };
 
   if (!mounted) {
@@ -75,6 +87,15 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-4">
+           <Button 
+            variant="outline" 
+            size="icon"
+            className="border-primary/50 text-white hover:bg-primary/10 hover:border-primary glow"
+            onClick={toggleTheme}
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
+
           <Button 
             variant="outline" 
             size="icon"
