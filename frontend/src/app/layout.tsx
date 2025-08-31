@@ -5,6 +5,7 @@ import Navbar from "@/components/header/Navbar";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { ASSIGNMENT_SEED, generateColorFromSeed } from "@/utils/seed";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -112,6 +113,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased wood-texture`}>
         <CartProvider>
           <WishlistProvider>
+            <AuthProvider>
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-1">{children}</main>
@@ -124,6 +126,7 @@ export default function RootLayout({
                 </div>
               </footer>
             </div>
+            </AuthProvider>
           </WishlistProvider>
         </CartProvider>
       </body>

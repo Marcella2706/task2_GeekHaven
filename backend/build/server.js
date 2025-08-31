@@ -39,39 +39,43 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const dotenv = __importStar(require("dotenv"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
-const dotenv = __importStar(require("dotenv"));
+const hmac_1 = require("./middleware/hmac");
+const rateLimiter_1 = require("./middleware/rateLimiter");
 dotenv.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
-app.use((0, cors_1.default)());
-app.use(express_1.default.json());
-app.use('/api/auth', authRoutes_1.default);
+app.use((0, cors_1.default)({ origin: "*", credentials: true }));
+app.use(express_1.default.json({ limit: '10mb' }));
+app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
+const globalLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use(globalLimiter);
+app.use(hmac_1.hmacSign);
+app.use('/api/auth', rateLimiter_1.rateLimiter, authRoutes_1.default);
 app.use('/api/users', userRoutes_1.default);
-app.get('/IIT2024018/healthz', (req, res) => {
-    res.json({ status: 'ok' });
-});
-let recentLogs = [];
-app.use((req, res, next) => {
-    recentLogs.unshift({
-        timestamp: new Date(),
-        method: req.method,
-        url: req.originalUrl,
-        ip: req.ip,
-    });
-    if (recentLogs.length > 50) {
-        recentLogs.pop();
-    }
-    next();
-});
-app.get('/logs/recent', (req, res) => {
-    res.json(recentLogs);
-});
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/reselling-platform";
 mongoose_1.default.connect(MONGO_URI)
     .then(() => {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`Assignment Seed: ${process.env.ASSIGNMENT_SEED || 'GHW25-DEFAULT'}`);
+        console.log(`API Documentation: http://localhost:${PORT}/api`);
+    });
 })
-    .catch(err => console.error(err));
+    .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+});
+exports.default = app;
 //# sourceMappingURL=server.js.map
