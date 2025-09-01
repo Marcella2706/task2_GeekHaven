@@ -21,16 +21,16 @@ export function generateColorFromSeed(seed: string): {
   gradient: string;
 } {
   const hash = hashSeed(seed);
-  const browns = ['#8B4513', '#A0522D', '#CD853F', '#D2691E', '#B8860B'];
-  const ambers = ['#FF8C00', '#FFA500', '#DAA520', '#F4A460', '#DEB887'];
+  const pinks = ['#FF69B4', '#FF1493', '#DB7093', '#C71585', '#B03060'];
+  const lightPinks = ['#FFA6C9', '#FF91AF', '#FF85A1', '#FF7B96', '#FF6F88'];
   
-  const primaryIndex = hash % browns.length;
-  const secondaryIndex = (hash + 1) % ambers.length;
-  const accentIndex = (hash + 2) % browns.length;
+  const primaryIndex = hash % pinks.length;
+  const secondaryIndex = (hash + 1) % lightPinks.length;
+  const accentIndex = (hash + 2) % pinks.length;
   
-  const primary = browns[primaryIndex];
-  const secondary = ambers[secondaryIndex];
-  const accent = browns[accentIndex];
+  const primary = pinks[primaryIndex];
+  const secondary = lightPinks[secondaryIndex];
+  const accent = pinks[accentIndex];
   const gradient = `linear-gradient(135deg, ${primary} 0%, ${secondary} 50%, ${accent} 100%)`;
   
   return { primary, secondary, accent, gradient };
